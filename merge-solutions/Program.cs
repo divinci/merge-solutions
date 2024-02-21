@@ -55,7 +55,7 @@ namespace SolutionMerger
                 return -1;
             }
 
-            if (fixDupeGuids)
+            if (fixDupeGuids && !nonstop)
             {
                 Console.WriteLine("Program is going to modify lots of various .sln and .proj files");
                 Console.WriteLine("Please make sure that you have a backup copy");
