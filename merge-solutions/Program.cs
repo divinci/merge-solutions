@@ -1,5 +1,6 @@
 ﻿using MergeSolutions.Core.Parsers;
 using MergeSolutions.Core.Utils;
+using System.Text.RegularExpressions;
 
 namespace SolutionMerger
 {
@@ -18,6 +19,7 @@ namespace SolutionMerger
             var nonstop = false;
             var outputSlnPath = "merged.sln";
             var fixDupeGuids = false;
+            var replaceGuids = false;
             var solutionNames = new List<string>();
 
             for (var i = 0; i < args.Length; i++)
@@ -38,6 +40,9 @@ namespace SolutionMerger
                     case "/fix":
                         fixDupeGuids = true;
                         break;
+                    case "/replace":
+                        replaceGuids = true;
+                        break;
                     case "/config":
                         solutionNames.AddRange(File.ReadAllLines(args[i + 1]).Where(fn => !string.IsNullOrEmpty(fn)));
                         i++;
@@ -53,6 +58,22 @@ namespace SolutionMerger
             {
                 OutputHelp();
                 return -1;
+            }
+
+            if(replaceGuids)
+            {
+                Console.WriteLine("Program is going to modify all the .sln files");
+                foreach(var solution in solutionNames)
+                {
+                    var solutionFileContents = File.ReadAllText(solution);
+                    var guids = new Regex("[A-Z0-9]{8}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{12}", RegexOptions.IgnoreCase).Matches(solutionFileContents);
+                    foreach(Match guid in guids)
+                    {
+                        var newGuid = Guid.NewGuid().ToString().ToUpper();
+                        solutionFileContents.Replace(guid.Value, newGuid);
+                    }
+                    File.WriteAllText(solution, solutionFileContents);
+                }
             }
 
             if (fixDupeGuids && !nonstop)
